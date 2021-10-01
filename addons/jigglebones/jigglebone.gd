@@ -32,7 +32,7 @@ func get_bone_forward_local():
 
 func _ready():
 	set_as_toplevel(true)  # Ignore parent transformation
-	prev_pos = global_transform.origin
+	prev_pos = Vector3(clamp(global_transform.origin.x, -1.0, 1.0), clamp(global_transform.origin.y, -1.0, 1.0), clamp(global_transform.origin.z, -1.0, 1.0))
 
 func _process(delta):
 	
@@ -72,8 +72,8 @@ func _process(delta):
 	
 	# If not using gravity, apply force in the direction of the bone (so it always wants to point "forward")
 	var grav = bone_transf_rest_world.basis.xform(Vector3(0, 0, -1)).normalized() * 9.81
-	var vel = (global_transform.origin - prev_pos) / delta
-	
+	var vel = (Vector3(clamp(global_transform.origin.x, -1.0, 1.0), clamp(global_transform.origin.y, -1.0, 1.0), clamp(global_transform.origin.z, -1.0, 1.0)) - prev_pos) / delta
+	print(vel)
 	if use_gravity:
 		grav = gravity
 		
@@ -81,7 +81,7 @@ func _process(delta):
 	vel += grav 
 	vel -= vel * damping * delta  # Damping
 	
-	prev_pos = global_transform.origin
+	prev_pos = Vector3(clamp(global_transform.origin.x, -1.0, 1.0), clamp(global_transform.origin.y, -1.0, 1.0), clamp(global_transform.origin.z, -1.0, 1.0))
 	global_transform.origin = global_transform.origin + vel * delta
 	
 	############### Solve distance constraint ##############
@@ -92,7 +92,7 @@ func _process(delta):
 	
 	############## Rotate the bone to point to this object #############
 
-	var diff_vec_local = bone_transf_world.affine_inverse().xform(global_transform.origin).normalized() 
+	var diff_vec_local = bone_transf_world.affine_inverse().xform(Vector3(clamp(global_transform.origin.x, -1.0, 1.0), clamp(global_transform.origin.y, -1.0, 1.0), clamp(global_transform.origin.z, -1.0, 1.0))).normalized() 
 	
 	var bone_forward_local = get_bone_forward_local()
 
@@ -112,7 +112,7 @@ func _process(delta):
 	if is_nan(bone_new_transf_obj[0][0]):
 		bone_new_transf_obj = Transform()  # Corrupted somehow
 
-	skeleton.set_bone_global_pose(bone_id, bone_new_transf_obj) 
+	skeleton.set_bone_global_pose_override(bone_id, bone_new_transf_obj, 1, true)
 	
 	# Orient this object to the jigglebone
 	global_transform.basis = (skeleton.global_transform * skeleton.get_bone_global_pose(bone_id)).basis
